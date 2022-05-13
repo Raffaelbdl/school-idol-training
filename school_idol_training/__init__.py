@@ -10,8 +10,7 @@ class Choregraphy:
     """A choregraphy is described by its title and its video"""
 
     title: str
-    video: np.ndarray
     keypoints: List[Dict[str, List[float]]]
     landmarks: List[NormalizedLandmarkList]
 
-    original_video_path: str = field(default=None)
+    video_path: str = field(default=None)
