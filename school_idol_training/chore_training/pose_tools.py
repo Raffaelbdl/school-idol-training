@@ -1,7 +1,7 @@
-import enum
 from typing import Dict, List
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -45,27 +45,6 @@ LANDMARK_NAMES = [
 ]
 
 
-def extrapolate_keypoints(
-    chore: Choregraphy, new_fps: int
-) -> List[Dict[str, List[float]]]:
-    cap = cv2.VideoCapture(chore.video_path)
-    cur_fps = int(cap.get(cv2.CAP_PROP_FPS))
-
-    cur_t = np.linspace(0, 1, 1 / len(chore.keypoints))
-    new_t = np.linspace(0, 1, 1 / (len(chore.keypoints) * new_fps / cur_fps))
-
-    new_keypoints = []
-    for keypoint in chore.keypoints:
-        if keypoint is None:
-            new_keypoints.append(None)
-        else:
-            new_keypoint = {}
-            for name in new_keypoint.keys():
-                named_keypoint = []
-                for k in new_keypoint[name]:
-                    pass
-
-
 def keypoints_as_time_series(keypoints: List[Dict[str, List[float]]]):
     """Makes time series of keypoints
 
@@ -93,7 +72,7 @@ def keypoints_as_time_series(keypoints: List[Dict[str, List[float]]]):
             try:
                 t_keypoints[name].append(f_keypoint[name][:2])
                 t_visible[name].append(f)
-            except KeyError or TypeError:
+            except (KeyError, TypeError):
                 t_keypoints[name].append([-10, -10])
 
     return t_keypoints, t_visible
@@ -107,8 +86,40 @@ def fill_time_serie(sequence: np.ndarray, t_visible: List[int], fps: int) -> np.
             sequence[t_visible[1]] = sequence[t_visible[0]]
 
         for t in range(t_visible[0] + 2, t_visible[-1]):
-            v = (sequence[t - 2] + sequence[t - 1]) / 2
+            v = sequence[t - 2] + sequence[t - 1]
             if np.all(np.equal(sequence[t], np.array([-10, -10]))):
-                sequence[t] = v / fps + sequence[t - 1]
+                sequence[t] = np.clip(v / fps + sequence[t - 1], 0, 1)
 
     return sequence
+
+
+def extrapolate_time_serie(sequence: np.ndarray, new_length: int) -> np.ndarray:
+
+    cur_t = np.linspace(0, 1, len(sequence))
+    new_t = np.linspace(0, 1, new_length)
+
+    new_sequence = np.empty(shape=(new_length, *sequence.shape[1:]))
+    for i in range(new_sequence.shape[-1]):
+        min_val = np.min(sequence[..., i] > 10)
+        interpoli = interp1d(cur_t, sequence[..., i])
+        new_val = interpoli(new_t)
+        new_val = np.where(new_val >= min_val, new_val, -10)
+        new_sequence[..., i] = new_val
+    return new_sequence
+
+
+def plot_chore(chore: Choregraphy, keypoint_name: str) -> None:
+    cap = cv2.VideoCapture(chore.video_path)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    t_keypoints, t_visible = keypoints_as_time_series(chore.keypoints)
+
+    new_keypoints = {
+        name: extrapolate_time_serie(
+            fill_time_serie(np.array(sequence), t_visible[name], fps), 500
+        )
+        for name, sequence in t_keypoints.items()
+    }
+    plt.plot(new_keypoints[keypoint_name])
+    plt.set_ylim(bottom=0)
+    plt.legend(["x", "y"])
+    plt.show()
