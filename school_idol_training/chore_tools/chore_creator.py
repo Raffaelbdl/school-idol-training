@@ -15,6 +15,11 @@ import cv2
 from tqdm import tqdm
 
 from school_idol_training import Choregraphy
+from school_idol_training.chore_training.scoring import (
+    keypoints_as_time_series,
+    find_baseline_sequence_dtw,
+    get_dtw_from_keypoints,
+)
 
 LANDMARK_NAMES = [
     "nose",
@@ -124,12 +129,16 @@ def get_keypoints_from_video_file(
 
 def make_chore_from_file(title: str, filepath: str) -> Choregraphy:
     """Creates a choregraphy from a video"""
+    assert os.path.isfile(filepath)
     keypoints, landmarks = get_keypoints_from_video_file(filepath=filepath)
+    baseline_keypoints, baseline_score = find_baseline_sequence_dtw(keypoints, filepath)
     return Choregraphy(
         title=title,
         keypoints=keypoints,
         landmarks=landmarks,
         video_path=filepath,
+        baseline_keypoints=baseline_keypoints,
+        baseline_score=baseline_score,
     )
 
 
@@ -144,6 +153,8 @@ def save_chore(chore: Choregraphy, dirpath: str) -> None:
         pickle.dump(chore.keypoints, f)
     with open(os.path.join(chore_path, "landmarks"), "wb") as f:
         pickle.dump(chore.landmarks, f)
+    with open(os.path.join(chore_path, "baseline_keypoints"), "wb") as f:
+        pickle.dump(chore.baseline_keypoints, f)
 
 
 def load_chore(chore_path: str) -> Choregraphy:
@@ -153,10 +164,17 @@ def load_chore(chore_path: str) -> Choregraphy:
         keypoints = pickle.load(f)
     with open(os.path.join(chore_path, "landmarks"), "rb") as f:
         landmarks = pickle.load(f)
+    with open(os.path.join(chore_path, "baseline_keypoints"), "rb") as f:
+        baseline_keypoints = pickle.load(f)
+
+    _, baseline_score = find_baseline_sequence_dtw(
+        keypoints, os.path.join(chore_path, "video.mp4"), baseline_keypoints
+    )
 
     return Choregraphy(
         title=title,
         keypoints=keypoints,
         landmarks=landmarks,
         video_path=os.path.join(chore_path, "video.mp4"),
+        baseline_score=baseline_score,
     )

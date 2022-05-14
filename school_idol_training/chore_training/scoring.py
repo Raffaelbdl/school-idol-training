@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -43,7 +43,9 @@ def get_score(chore: Choregraphy, trainee: Choregraphy, method: str):
     else:
         raise NotImplementedError
 
-    return score / len(nct_keypoints.keys())
+    score = (1 - score / len(nct_keypoints.keys()) / chore.baseline_score) * 100
+
+    return score
 
 
 def make_velocity_sequence(sequence: np.ndarray):
@@ -155,3 +157,47 @@ def dtw(sequence1: np.ndarray, sequence2: np.ndarray) -> float:
 
 def fast_dtw(s, t):
     return np.sum([fastdtw(s[..., i], t[..., i])[0] for i in range(s.shape[-1])])
+
+
+def get_dtw_from_keypoints(nct_keypoints, chal_keypoints) -> float:
+    chal_score = 0
+    for name in nct_keypoints.keys():
+        nct_vel = make_velocity_sequence(nct_keypoints[name])
+        ntt_vel = clip_sequence_by_other(
+            make_velocity_sequence(chal_keypoints[name]), nct_vel
+        )
+        chal_score += fast_dtw(
+            nct_vel,
+            ntt_vel,
+        )
+    return chal_score / len(nct_keypoints.keys()) / 3
+
+
+def find_baseline_sequence_dtw(
+    chore_keypoints: List[Dict[str, List[float]]],
+    chore_video_path: str,
+    baseline_keypoints: Optional[Dict[str, np.ndarray]] = None,
+) -> Tuple[Dict[str, np.ndarray], float]:
+
+    ct_keypoints, ct_visible = keypoints_as_time_series(chore_keypoints)
+
+    cap = cv2.VideoCapture(chore_video_path)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    cap.release()
+
+    nct_keypoints = {
+        name: fill_time_serie(np.array(sequence), ct_visible[name], fps)
+        for name, sequence in ct_keypoints.items()
+    }
+
+    baseline_keypoints = (
+        baseline_keypoints
+        if baseline_keypoints is not None
+        else {
+            name: np.random.uniform(0, 1, size=nct_keypoints[name].shape)
+            for name in ct_keypoints.keys()
+        }
+    )
+    baseline_score = get_dtw_from_keypoints(nct_keypoints, baseline_keypoints)
+
+    return baseline_keypoints, baseline_score
