@@ -20,16 +20,22 @@ def display_chore(chore: Choregraphy, flip: bool = False) -> None:
     cap = cv2.VideoCapture(chore.video_path)
     n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
+    sleep = 1 / fps
+
     for i in range(n_frames):
+        t1 = time.time()
         ret, annotated_frame = cap.read()
-        mp_drawing.draw_landmarks(
-            annotated_frame,
-            chore.landmarks[i],
-            mp_pose.POSE_CONNECTIONS,
-            landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
-        )
+        # mp_drawing.draw_landmarks(
+        #     annotated_frame,
+        #     chore.landmarks[i],
+        #     mp_pose.POSE_CONNECTIONS,
+        #     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
+        # )
         if flip:
             annotated_frame = cv2.flip(annotated_frame, 1)
-        cv2.imshow(chore.title, np.array(annotated_frame, np.uint8))
-        if cv2.waitKey(fps) & 0xFF == ord("q"):
+        cv2.imshow(chore.title, annotated_frame)
+        t1 = time.time() - t1
+        waitfor = max(1, int((sleep - t1) * 1000))
+        print(waitfor)
+        if cv2.waitKey(waitfor) & 0xFF == ord("q"):
             break
