@@ -32,12 +32,18 @@ if __name__ == "__main__":
         print("Press 'Q' to start")
 
         dance_along(chore)
-        trainee = make_chore_from_file(f"trainee_{choregraphies[choice]}", "./tmp.mp4")
-        save_chore(trainee, "./trainee_chore/")
-        os.remove("./tmp.mp4")
+        trainee = make_chore_from_file(
+            f"trainee_{choregraphies[choice]}",
+            "./tmp.mp4",
+            load_message="We are computing your score ... ",
+        )
 
         score = get_score(chore, trainee, "fast_dtw")
-        print(f"Your final score is {score}")
+        trainee.score = score
+        save_chore(trainee, "./trainee_chores/")
+        os.remove("./tmp.mp4")
+
+        print("Your final score is " + Fore.RED + f"{int(score)}" + Fore.RESET)
 
         while True:
             choice = input("Train again ? [y/n] : ")

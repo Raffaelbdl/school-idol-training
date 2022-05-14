@@ -2,7 +2,7 @@ import json
 import os
 import pickle
 import shutil
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 from mediapipe.python.solutions import (
@@ -78,7 +78,7 @@ def array_from_video_file(filepath: str) -> Tuple[np.ndarray, int]:
 
 
 def get_keypoints_from_video_file(
-    filepath: str,
+    filepath: str, load_message: Optional[str] = None
 ) -> Tuple[List[Dict[str, List[float]]], NormalizedLandmarkList]:
     """Gets keypoints from array for each frame
 
@@ -97,8 +97,12 @@ def get_keypoints_from_video_file(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ) as pose:
-
-        for i in tqdm(range(n_frames), desc="Making prediction from array ..."):
+        iterator = (
+            tqdm(range(n_frames), desc=load_message)
+            if load_message is not None
+            else tqdm(range(n_frames), desc="Making prediction from array ...")
+        )
+        for i in iterator:
 
             ret, frame = cap.read()
             if not ret:
@@ -127,10 +131,14 @@ def get_keypoints_from_video_file(
     return keypoints, landmarks
 
 
-def make_chore_from_file(title: str, filepath: str) -> Choregraphy:
+def make_chore_from_file(
+    title: str, filepath: str, load_message: Optional[str] = None
+) -> Choregraphy:
     """Creates a choregraphy from a video"""
     assert os.path.isfile(filepath)
-    keypoints, landmarks = get_keypoints_from_video_file(filepath=filepath)
+    keypoints, landmarks = get_keypoints_from_video_file(
+        filepath=filepath, load_message=load_message
+    )
     baseline_keypoints, baseline_score = find_baseline_sequence_dtw(keypoints, filepath)
     return Choregraphy(
         title=title,
@@ -155,6 +163,8 @@ def save_chore(chore: Choregraphy, dirpath: str) -> None:
         pickle.dump(chore.landmarks, f)
     with open(os.path.join(chore_path, "baseline_keypoints"), "wb") as f:
         pickle.dump(chore.baseline_keypoints, f)
+    with open(os.path.join(chore_path, "score"), "wb") as f:
+        pickle.dump(chore.score, f)
 
 
 def load_chore(chore_path: str) -> Choregraphy:
@@ -166,6 +176,8 @@ def load_chore(chore_path: str) -> Choregraphy:
         landmarks = pickle.load(f)
     with open(os.path.join(chore_path, "baseline_keypoints"), "rb") as f:
         baseline_keypoints = pickle.load(f)
+    with open(os.path.join(chore_path, "score"), "rb") as f:
+        score = pickle.load(f)
 
     _, baseline_score = find_baseline_sequence_dtw(
         keypoints, os.path.join(chore_path, "video.mp4"), baseline_keypoints
@@ -177,4 +189,5 @@ def load_chore(chore_path: str) -> Choregraphy:
         landmarks=landmarks,
         video_path=os.path.join(chore_path, "video.mp4"),
         baseline_score=baseline_score,
+        score=score,
     )
