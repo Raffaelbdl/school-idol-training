@@ -6,7 +6,10 @@ import cv2
 
 def play_video_with_sound(video_path: str) -> None:
     """Uses ffmpeg"""
-    subprocess.run(f"ffplay {video_path} -autoexit", shell=True)
+    p = subprocess.Popen(
+        f"ffplay {video_path} -autoexit -hide_banner -loglevel error", shell=True
+    )
+    return p
 
 
 def test_camera() -> int:

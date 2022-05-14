@@ -11,7 +11,7 @@ from mediapipe.python.solutions import (
 import numpy as np
 
 from sip import Choregraphy
-from sip.video_tools import test_camera
+from sip.video_tools import play_video_with_sound, test_camera
 
 
 def write_video(n_frames: int, fps: int) -> None:
@@ -54,7 +54,7 @@ def dance_along(chore: Choregraphy) -> None:
     cap_trainee.set(cv2.CAP_PROP_FPS, fps)
     out = cv2.VideoWriter("tmp.mp4", fourcc, fps, (f_width, f_height))
 
-    p = subprocess.Popen(f"ffplay {chore.video_path} -autoexit", shell=True)
+    p = play_video_with_sound(chore.video_path)
     while p.poll() is None:
 
         ret_trainee, trainee_frame = cap_trainee.read()
