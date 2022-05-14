@@ -16,3 +16,5 @@ class Choregraphy:
     video_path: str = field(default=None)
     baseline_keypoints: Dict[str, np.ndarray] = field(default=None)
     baseline_score: float = field(default=None)
+
+    score: float = field(default=None)  # for trainee
