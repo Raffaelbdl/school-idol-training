@@ -81,7 +81,7 @@ def keypoints_as_time_series(keypoints: List[Dict[str, List[float]]]):
 
 def fill_time_serie(sequence: np.ndarray, t_visible: List[int], fps: int) -> np.ndarray:
 
-    if len(t_visible) > 0:
+    if len(t_visible) > 1:
         # initialize two first points
         if t_visible[1] != t_visible[0] + 1:
             sequence[t_visible[1]] = sequence[t_visible[0]]
