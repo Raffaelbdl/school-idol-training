@@ -14,8 +14,8 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-from school_idol_training import Choregraphy
-from school_idol_training.chore_training.scoring import (
+from sip import Choregraphy
+from sip.chore_training.scoring import (
     keypoints_as_time_series,
     find_baseline_sequence_dtw,
     get_dtw_from_keypoints,

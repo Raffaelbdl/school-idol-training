@@ -1,7 +1,7 @@
 import cv2
 import subprocess
+import time
 
-# from ffpyplayer.player import MediaPlayer
 import mediapipe as mp
 from mediapipe.python.solutions import (
     drawing_utils as mp_drawing,
@@ -10,8 +10,8 @@ from mediapipe.python.solutions import (
 )
 import numpy as np
 
-from school_idol_training import Choregraphy
-from school_idol_training.video_tools import test_camera
+from sip import Choregraphy
+from sip.video_tools import test_camera
 
 
 def write_video(n_frames: int, fps: int) -> None:
@@ -44,6 +44,8 @@ def write_video(n_frames: int, fps: int) -> None:
 def dance_along(chore: Choregraphy) -> None:
 
     fps = test_camera()
+
+    time.sleep(3.0)
 
     cap_trainee = cv2.VideoCapture(0)
     f_height = int(cap_trainee.get(cv2.CAP_PROP_FRAME_HEIGHT))

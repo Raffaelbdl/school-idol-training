@@ -2,13 +2,13 @@ import os
 
 from colorama import Fore
 
-from school_idol_training.chore_tools.chore_creator import (
+from sip.chore_tools.chore_creator import (
     load_chore,
     make_chore_from_file,
     save_chore,
 )
-from school_idol_training.chore_training.trainee import dance_along
-from school_idol_training.chore_training.scoring import get_score
+from sip.chore_training.trainee import dance_along
+from sip.chore_training.scoring import get_score
 
 if __name__ == "__main__":
     print(

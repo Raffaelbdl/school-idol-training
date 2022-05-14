@@ -11,7 +11,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-from school_idol_training import Choregraphy
+from sip import Choregraphy
 
 
 def display_chore(chore: Choregraphy, flip: bool = False) -> None:

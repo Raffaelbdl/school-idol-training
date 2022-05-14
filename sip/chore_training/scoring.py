@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 from fastdtw import fastdtw
 
-from school_idol_training import Choregraphy
-from school_idol_training.chore_training.pose_tools import (
+from sip import Choregraphy
+from sip.chore_training.pose_tools import (
     extrapolate_time_serie,
     fill_time_serie,
     keypoints_as_time_series,

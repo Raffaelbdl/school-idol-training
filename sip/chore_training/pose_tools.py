@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
-from school_idol_training import Choregraphy
+from sip import Choregraphy
 
 
 LANDMARK_NAMES = [
