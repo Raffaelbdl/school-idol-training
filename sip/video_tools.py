@@ -30,3 +30,30 @@ def test_camera() -> int:
     cv2.destroyAllWindows()
 
     return int(n_frames / total)
+
+
+def write_video(n_frames: int, fps: int) -> None:
+
+    cap = cv2.VideoCapture(0)
+
+    f_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    f_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    out = cv2.VideoWriter("tmp.mp4", fourcc, fps, (f_width, f_height))
+
+    for i in range(n_frames):
+        ret, frame = cap.read()
+
+        if ret:
+            out.write(frame)
+            cv2.imshow("Capture", cv2.flip(frame, 1))
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        else:
+            break
+
+    cap.release()
+    out.release()
+
+    cv2.destroyAllWindows()
