@@ -58,6 +58,7 @@ def keypoints_as_time_series(keypoints: List[Dict[str, List[float]]]):
     t_keypoints = {name: [] for name in LANDMARK_NAMES}
     t_visible = {name: [] for name in LANDMARK_NAMES}
 
+    not_none = 0
     for i in range(len(keypoints)):
         if keypoints[i] is not None:
             not_none = i
