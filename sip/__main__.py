@@ -35,12 +35,20 @@ if __name__ == "__main__":
             load_message="We are computing your score ... ",
         )
 
-        score = cosine_similarity(chore, trainee) * 100
+        score, proportion = cosine_similarity(chore, trainee)
+        score *= 100
+
         trainee.score = score
         save_chore(trainee, "./trainee_chores/")
         os.remove("./tmp.mp4")
 
-        print("Your final score is " + Fore.RED + f"{int(score)}" + Fore.RESET)
+        print(
+            "Your final score is "
+            + Fore.RED
+            + f"{int(score)}"
+            + Fore.RESET
+            + f" with joint visibility of {proportion}"
+        )
 
         while True:
             choice = input("Train again ? [y/n] : ")
