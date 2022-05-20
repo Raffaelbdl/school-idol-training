@@ -2,6 +2,11 @@ import subprocess
 import time
 
 import cv2
+from mediapipe.python.solutions import (
+    drawing_utils as mp_drawing,
+    drawing_styles as mp_drawing_styles,
+    pose as mp_pose,
+)
 
 
 def play_video_with_sound(video_path: str) -> None:
@@ -18,14 +23,28 @@ def test_camera() -> int:
 
     start = time.time()
     n_frames = 0
-    while cap.isOpened():
-        n_frames += 1
-        ret, frame = cap.read()
-        cv2.imshow("Test Camera", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-    total = time.time() - start
+    with mp_pose.Pose(
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+    ) as pose:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            mp_drawing.draw_landmarks(
+                frame,
+                results.pose_landmarks,
+                mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
+            )
 
+            n_frames += 1
+            cv2.imshow("Test Camera", cv2.flip(frame, 1))
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+    total = time.time() - start
     cap.release()
     cv2.destroyAllWindows()
 
