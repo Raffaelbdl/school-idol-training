@@ -57,4 +57,5 @@ Many improvements will be made in the future :
 
 # Disclaimer
 This project was primarily made for fun :innocent:
-There will be errors with scores, but high score are most likely accurate if joint visibility is high
+
+There will be errors with scores, but high scores are most likely accurate if joint visibility is high
