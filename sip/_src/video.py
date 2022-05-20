@@ -9,6 +9,7 @@ from mediapipe.python.solutions import (
     drawing_styles as mp_drawing_styles,
     pose as mp_pose,
 )
+import numpy as np
 
 
 def play_video_with_sound(video_path: str) -> subprocess.Popen:
@@ -27,6 +28,9 @@ def play_video_with_sound(video_path: str) -> subprocess.Popen:
 
 def test_camera(display_joints: bool = False) -> int:
     """Computes the camera framerate"""
+    # necessary to make test_camera window at front
+    _open_dummy_cv2_window() 
+
     cap = cv2.VideoCapture(0)
 
     start = time.time()
@@ -53,6 +57,7 @@ def test_camera(display_joints: bool = False) -> int:
 
             n_frames += 1
             cv2.imshow("Test Camera", cv2.flip(frame, 1))
+            cv2.setWindowProperty("Test Camera", cv2.WND_PROP_TOPMOST, 1)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
@@ -94,3 +99,13 @@ def record_camera(video_name: str, dir_path: str, n_frames: int) -> None:
     out.release()
 
     cv2.destroyAllWindows()
+
+
+def _open_dummy_cv2_window():
+    cv2.namedWindow("dummy", cv2.WINDOW_NORMAL)
+    img = np.ones((100, 100, 3))
+    cv2.imshow("dummy", img)
+    cv2.setWindowProperty("dummy",cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.waitKey(1)
+    cv2.setWindowProperty("dummy", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+    cv2.destroyWindow("dummy")
