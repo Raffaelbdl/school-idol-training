@@ -132,3 +132,5 @@ dmypy.json
 # custom
 choregraphies/*
 trainee_chores/*
+**/tests/*
+make_chore.py
