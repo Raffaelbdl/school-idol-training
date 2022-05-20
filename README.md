@@ -54,3 +54,6 @@ Many improvements will be made in the future :
 - [ ] Giving score in real time
 - [ ] Support for multi-person pose estimation
 - [ ] Support for MMD choregraphies
+
+# Disclaimer
+This project was primarily made for fun :innocent:
