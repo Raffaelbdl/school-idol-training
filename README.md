@@ -50,10 +50,11 @@ This project is based on the [Google Mediapipe API](https://google.github.io/med
 
 # Plans for the future
 Many improvements will be made in the future :
-- [x] Improving accuracy of the scoring system
+- [ ] Improving accuracy of the scoring system
 - [ ] Giving score in real time
 - [ ] Support for multi-person pose estimation
 - [ ] Support for MMD choregraphies
 
 # Disclaimer
 This project was primarily made for fun :innocent:
+There will be errors with scores, but high score are most likely accurate if joint visibility is high
