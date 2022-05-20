@@ -28,6 +28,21 @@ Then launch the module :
 python -m sip
 ```
 
+# Make your first choregraphy
+
+```python
+from sip import make_chore_from_file
+
+chore = make_chore_from_file("$chore_title", "$path_to_video_file.mp4")
+save_chore(chore, "./choregraphies/")
+```
+
+Then if you have chosen ```./choregraphies``` as your choregraphies folder, simply run the module :
+
+```bash
+python -m sip
+```
+
 # Resources
 This project is based on the [Google Mediapipe API](https://google.github.io/mediapipe/).
 
