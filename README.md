@@ -1,5 +1,7 @@
 ![Muse](/resources/love_live_school_idol_project.jpg)
 
+![status](https://img.shields.io/badge/status-work%20in%20progress-red)
+![disclaimer](https://img.shields.io/badge/disclaimer-fun%20project-important)
 # School Idol Training 
 Yes I know, you have always dreamed about becoming an **idol**... But where to start ?
 
@@ -23,7 +25,7 @@ Install the requirements :
 ```bash
 pip install -r requirements.txt
 ```
-Then launch the module :
+Then run the module :
 ```bash
 python -m sip
 ```
@@ -52,3 +54,6 @@ Many improvements will be made in the future :
 - [ ] Giving score in real time
 - [ ] Support for multi-person pose estimation
 - [ ] Support for MMD choregraphies
+
+# Disclaimer
+This project was primarily made for fun :innocent:
