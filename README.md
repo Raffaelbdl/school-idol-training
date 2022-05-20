@@ -46,7 +46,7 @@ python -m sip
 ```
 
 # Resources
-This project is based on the [Google Mediapipe API](https://google.github.io/mediapipe/).
+This project is powered by [Google Mediapipe API](https://google.github.io/mediapipe/).
 
 # Plans for the future
 Many improvements will be made in the future :
