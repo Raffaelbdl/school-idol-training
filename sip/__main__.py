@@ -6,15 +6,29 @@ from sip import load_chore, make_chore_from_file, save_chore
 from sip import dance_along
 from sip import cosine_similarity
 
+choregraphies_dir_path = "./choregraphies"
+
 
 if __name__ == "__main__":
     print(
-        "Welcome to " + Fore.MAGENTA + "'The School Idol Project'" + Fore.RESET + "!!"
+        "\nWelcome to " + Fore.MAGENTA + "'The School Idol Project'" + Fore.RESET + "!!"
     )
     print("Are you ready to become an " + Fore.MAGENTA + "IDOL" + Fore.RESET + "??")
 
     while True:
-        choregraphies = os.listdir("./choregraphies")
+        try:
+            choregraphies = os.listdir(choregraphies_dir_path)
+        except FileNotFoundError:
+            print(f"\ndirectory '{choregraphies_dir_path}' does not exist")
+            print("Please specify another directory in __main__.py")
+            break
+
+        if len(choregraphies) == 0:
+            print(Fore.RED + "\nYou don't have any choregraphy !" + Fore.RESET)
+            print("Please find how to make one in the README file")
+            print("Or at https://github.com/Raffaelbdl/school-idol-training")
+            break
+
         print("\nAvailable choregraphies are :")
         for i, chore_name in enumerate(choregraphies):
             print(f"{i} - {chore_name}")
@@ -23,7 +37,7 @@ if __name__ == "__main__":
             if choice in range(len(choregraphies)):
                 break
 
-        chore = load_chore(os.path.join("./choregraphies", choregraphies[choice]))
+        chore = load_chore(os.path.join(choregraphies_dir_path, choregraphies[choice]))
 
         print("Please set up your camera")
         print("Press 'Q' to start")
@@ -47,7 +61,7 @@ if __name__ == "__main__":
             + Fore.RED
             + f"{int(score)}"
             + Fore.RESET
-            + f" with joint visibility of {proportion}"
+            + f" with joint visibility of {proportion:.2f}"
         )
 
         while True:
@@ -60,4 +74,4 @@ if __name__ == "__main__":
         else:
             break
 
-    print("Thanks for playing !")
+    print("\nThanks for playing !\n")
