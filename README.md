@@ -23,7 +23,7 @@ Install the requirements :
 ```bash
 pip install -r requirements.txt
 ```
-Then launch the module :
+Then run the module :
 ```bash
 python -m sip
 ```
