@@ -2,13 +2,10 @@ import os
 
 from colorama import Fore
 
-from sip.chore_tools.chore_creator import (
-    load_chore,
-    make_chore_from_file,
-    save_chore,
-)
-from sip.chore_training.trainee import dance_along
-from sip.chore_training.scoring import get_score
+from sip import load_chore, make_chore_from_file, save_chore
+from sip import dance_along
+from sip import cosine_similarity
+
 
 if __name__ == "__main__":
     print(
@@ -38,7 +35,7 @@ if __name__ == "__main__":
             load_message="We are computing your score ... ",
         )
 
-        score = get_score(chore, trainee, "fast_dtw")
+        score = cosine_similarity(chore, trainee) * 100
         trainee.score = score
         save_chore(trainee, "./trainee_chores/")
         os.remove("./tmp.mp4")
