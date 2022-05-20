@@ -1,15 +1,15 @@
 ![Muse](/resources/love_live_school_idol_project.jpg)
 
 # School Idol Training 
-Yes I know, you have always dreamed about becoming an idol... But where to start ?
+Yes I know, you have always dreamed about becoming an **idol**... But where to start ?
 
-What if the solution was Artificial Intelligence ?
+What if the solution was **Artificial Intelligence** ?
 
 ```Who said Artificial Intelligence ?! count me in !```  
 
 ![Kotori](/resources/kotori.jpeg)
 
-This project provides anyone with a personal trainer. Just put a video of the choregraphy you want to learn and tada :tada:
+This project provides anyone with a personal trainer. Just put a video of the choregraphy you want to learn and tada :tada: !
 
 ![Honoka](/resources/honoka.gif)
 
@@ -33,7 +33,7 @@ This project is based on the [Google Mediapipe API](https://google.github.io/med
 
 # Plans for the future
 Many improvements will be made in the future :
-- [] Improving accuracy of the scoring system
-- [] Giving score in real time
-- [] Support for multi-person pose estimation
-- [] Support for MMD choregraphies
+- [x] Improving accuracy of the scoring system
+- [ ] Giving score in real time
+- [ ] Support for multi-person pose estimation
+- [ ] Support for MMD choregraphies
