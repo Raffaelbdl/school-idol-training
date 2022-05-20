@@ -5,44 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
-from sip import Choregraphy
-
-
-LANDMARK_NAMES = [
-    "nose",
-    "left_eye_inner",
-    "left_eye",
-    "left_eye_outer",
-    "right_eye_inner",
-    "right_eye",
-    "right_eye_outer",
-    "left_ear",
-    "right_ear",
-    "mouth_left",
-    "mouth_right",
-    "left_shoulder",
-    "right_shoulder",
-    "left_elbow",
-    "right_elbow",
-    "left_wrist",
-    "right_wrist",
-    "left_pinky_1",
-    "right_pinky_1",
-    "left_index_1",
-    "right_index_1",
-    "left_thumb_2",
-    "right_thumb_2",
-    "left_hip",
-    "right_hip",
-    "left_knee",
-    "right_knee",
-    "left_ankle",
-    "right_ankle",
-    "left_heel",
-    "right_heel",
-    "left_foot_index",
-    "right_foot_index",
-]
+from sip import Choregraphy, LANDMARK_NAMES, JOINT_PAIRS
 
 
 def keypoints_as_time_series(keypoints: List[Dict[str, List[float]]]):
@@ -124,3 +87,51 @@ def plot_chore(chore: Choregraphy, keypoint_name: str) -> None:
     plt.set_ylim(bottom=0)
     plt.legend(["x", "y"])
     plt.show()
+
+
+def cosine_similarity(
+    sequenceA: np.ndarray,
+    sequenceB: np.ndarray,
+    sequenceC: np.ndarray,
+    sequenceD: np.ndarray,
+):
+    """Computes the cosine similarity between AB and CD"""
+    AB = sequenceB - sequenceA
+    CD = sequenceD - sequenceC
+    normAB = np.sqrt(np.sum(np.square(AB), axis=-1))
+    normCD = np.sqrt(np.sum(np.square(CD), axis=-1))
+    return np.sum(AB * CD, axis=-1) / (normAB * normCD + 1e-3)
+
+
+def get_cosine_similarity(t_keypoints1, t_keypoints2, joint1: str, joint2: str):
+    sequenceA = np.array(t_keypoints1[joint1])
+    sequenceB = np.array(t_keypoints1[joint2])
+    sequenceC = np.array(t_keypoints2[joint1])
+    sequenceD = np.array(t_keypoints2[joint2])
+    return cosine_similarity(sequenceA, sequenceB, sequenceC, sequenceD)
+
+
+def get_worst_cosine_score(t_keypoints):
+    scores = []
+    for joint_pair in JOINT_PAIRS:
+        scores.append(-1 * np.ones_like(t_keypoints[joint_pair[0]]))
+    return np.sum(scores)
+
+
+def get_best_cosine_score(t_keypoints):
+    scores = []
+    for joint_pair in JOINT_PAIRS:
+        scores.append(1 * np.ones_like(t_keypoints[joint_pair[0]]))
+    return np.sum(scores)
+
+
+def get_cosine_score(t_keypoints1, t_keypoints2):
+    scores = []
+    for joint_pair in JOINT_PAIRS:
+        scores.append(
+            get_cosine_similarity(
+                t_keypoints1, t_keypoints2, joint_pair[0], joint_pair[1]
+            )
+        )
+        print(joint_pair, scores[-1])
+    return np.sum(scores)
