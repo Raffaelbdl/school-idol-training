@@ -1,5 +1,7 @@
 ![Muse](/resources/love_live_school_idol_project.jpg)
 
+![status](https://img.shields.io/badge/status-work%20in%20progress-red)
+![disclaimer](https://img.shields.io/badge/disclaimer-fun%20project-important)
 # School Idol Training 
 Yes I know, you have always dreamed about becoming an **idol**... But where to start ?
 
