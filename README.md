@@ -3,7 +3,7 @@
 ![status](https://img.shields.io/badge/status-work%20in%20progress-red)
 ![disclaimer](https://img.shields.io/badge/disclaimer-fun%20project-important)
 # School Idol Training 
-Yes I know, you have always dreamed about becoming an **idol**... But where to start ?
+Yes I know, you have always dreamed of becoming an **idol**... But where to start ?
 
 What if the solution was **Artificial Intelligence** ?
 
@@ -46,7 +46,7 @@ python -m sip
 ```
 
 # Resources
-This project is based on the [Google Mediapipe API](https://google.github.io/mediapipe/).
+This project is powered by [Google Mediapipe API](https://google.github.io/mediapipe/).
 
 # Plans for the future
 Many improvements will be made in the future :
@@ -57,4 +57,5 @@ Many improvements will be made in the future :
 
 # Disclaimer
 This project was primarily made for fun :innocent:
-There will be errors with scores, but high score are most likely accurate if joint visibility is high
+
+There will be errors with scores, but high scores are most likely accurate if joint visibility is high
