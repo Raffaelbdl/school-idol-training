@@ -21,7 +21,7 @@ def play_video_with_sound(video_path: str) -> subprocess.Popen:
         A subprocess that launch the video
     """
     p = subprocess.Popen(
-        f"ffplay {video_path} -autoexit -hide_banner -loglevel error", shell=True
+        f"ffplay {video_path} -autoexit -hide_banner -loglevel error -fs", shell=True
     )
     return p
 
