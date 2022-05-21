@@ -24,7 +24,7 @@ def score_modifier(x: float, difficulty: int = 0):
         )
     elif difficulty == 2:  # hard
         return (1 / 3) * (
-            gauss(x, 1, 1, 0.2) + gauss(x, 1, 1, 0.3) + gauss(x, 1, 1, 0.2)
+            gauss(x, 1, 1, 0.2) + gauss(x, 1, 1, 0.2) + gauss(x, 1, 1, 0.1)
         )
     else:
         raise ValueError(f"{difficulty} difficulty is unknown")
@@ -55,9 +55,19 @@ def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy, difficulty: int)
     count_masks = {}
     link_count_masks = {}
     for joint_pair in JOINT_PAIRS:
-        sequence1 = t_keypoints1[joint_pair[0]] - t_keypoints1[joint_pair[1]]
-        sequence2 = new_t_keypoints2[joint_pair[0]] - new_t_keypoints2[joint_pair[1]]
-        _mask = union_of_masks(mask[joint_pair[0]], mask[joint_pair[1]])
+        if joint_pair[0] == "neck":
+            sequence1 = (t_keypoints1["right_shoulder"] + t_keypoints1["left_shoulder"]) / 2
+            sequence1 -= (t_keypoints1["right_hip"] + t_keypoints1["left_hip"]) / 2
+            sequence2 = (new_t_keypoints2["right_shoulder"] + new_t_keypoints2["left_shoulder"]) / 2
+            sequence2 -= (new_t_keypoints2["right_hip"] + new_t_keypoints2["left_hip"]) / 2
+            _mask = union_of_masks(
+                union_of_masks(mask["right_shoulder"], mask["left_shoulder"]),
+                union_of_masks(mask["right_hip"], mask["left_hip"])
+            )
+        else:
+            sequence1 = t_keypoints1[joint_pair[0]] - t_keypoints1[joint_pair[1]]
+            sequence2 = new_t_keypoints2[joint_pair[0]] - new_t_keypoints2[joint_pair[1]]
+            _mask = union_of_masks(mask[joint_pair[0]], mask[joint_pair[1]])
         cosines.append(cosine(sequence1, sequence2, _mask))
         link_masks.append(_mask)
 
