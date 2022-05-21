@@ -30,7 +30,7 @@ def score_modifier(x: float, difficulty: int = 0):
         raise ValueError(f"{difficulty} difficulty is unknown")
 
 
-def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy) -> Tuple[float, float]:
+def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy, difficulty: int) -> Tuple[float, float]:
     """Computes the cosine similarity between chore1 and chore2"""
     keypoints1 = chore1.keypoints
     keypoints2 = chore2.keypoints
@@ -73,7 +73,7 @@ def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy) -> Tuple[float, 
     normalized = (np.sum(cosines) + np.sum(link_masks)) / (
         2 * np.sum(link_masks) + 1e-3
     )
-    normalized = score_modifier(normalized, difficulty=0)
+    normalized = score_modifier(normalized, difficulty=difficulty)
 
     link_count = np.sum([s for s in link_count_masks.values()])
     count = np.sum([s for s in count_masks.values()])

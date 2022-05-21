@@ -7,6 +7,7 @@ from sip import dance_along
 from sip import cosine_similarity
 
 choregraphies_dir_path = "./choregraphies"
+difficulty = 2 # 0 easy, 1 medium, 2 hard
 
 
 if __name__ == "__main__":
@@ -49,7 +50,7 @@ if __name__ == "__main__":
             load_message="We are computing your score ... ",
         )
 
-        score, proportion = cosine_similarity(chore, trainee)
+        score, proportion = cosine_similarity(chore, trainee, difficulty)
         score *= 100
 
         trainee.score = score
