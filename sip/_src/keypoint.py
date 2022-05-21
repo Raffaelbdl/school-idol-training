@@ -101,4 +101,18 @@ def keypoints_to_time_series(
 
     t_keypoints = {k: np.array(v) for (k, v) in t_keypoints.items()}
     t_visible = {k: np.array(v) for (k, v) in t_visible.items()}
+
+    return add_neck_and_hip(t_keypoints, t_visible)
+
+
+def add_neck_and_hip(
+    t_keypoints: Dict[str, np.ndarray], t_visible: Dict[str, np.ndarray]
+) -> Tuple[Dict[str, np.ndarray]]:
+    t_keypoints["neck"] = (
+        t_keypoints["right_shoulder"] + t_keypoints["left_shoulder"]
+    ) / 2
+    t_visible["neck"] = t_visible["right_shoulder"] * t_visible["left_shoulder"]
+    t_keypoints["middle_hip"] = (t_keypoints["right_hip"] + t_keypoints["left_hip"]) / 2
+    t_visible["middle_hip"] = t_visible["right_hip"] * t_visible["left_hip"]
+
     return t_keypoints, t_visible
