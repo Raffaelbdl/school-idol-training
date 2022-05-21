@@ -25,6 +25,9 @@ Install the requirements :
 ```bash
 pip install -r requirements.txt
 ```
+Install FFMPEG from their [website](https://www.ffmpeg.org/download.html)
+
+
 Then run the module :
 ```bash
 python -m sip
