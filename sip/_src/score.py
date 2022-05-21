@@ -62,6 +62,7 @@ def cosine_similarity(
         sequence2 = new_t_keypoints2[joint_pair[0]] - new_t_keypoints2[joint_pair[1]]
         _mask = intersection_of_masks(mask[joint_pair[0]], mask[joint_pair[1]])
 
+
         cosines.append(cosine(sequence1, sequence2, _mask))
         link_masks.append(_mask)
 
