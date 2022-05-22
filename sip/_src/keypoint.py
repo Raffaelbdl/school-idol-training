@@ -50,7 +50,7 @@ def get_keypoints_from_video_file(
                     if landmark.HasField("visibility") and landmark.visibility >= 0.5:
                         frame_landmarks[landmark_name] = [
                             landmark.x,
-                            landmark.y,
+                            -landmark.y,
                             landmark.z,
                         ]
                 keypoints.append(frame_landmarks)
