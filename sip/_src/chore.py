@@ -17,7 +17,8 @@ class Choregraphy:
 
     title: str
     keypoints: List[Dict[str, List[float]]]
-    landmarks: List[NormalizedLandmarkList]
+
+    landmarks: List[NormalizedLandmarkList] = field(default=None)
     video_path: str = field(default=None)
 
     score: float = field(default=None)  # for trainee
@@ -79,6 +80,7 @@ def plot_chore(chore: Choregraphy, keys: Optional[List[str]] = None) -> None:
 
 
 def plot_keypoints(keypoints, keys: Optional[List[str]] = None) -> None:
+
     t_keypoints, t_visible = keypoints_to_time_series(keypoints)
 
     if keys is None:

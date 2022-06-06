@@ -31,7 +31,7 @@ def interpolate_time_series(
     return new_sequence, new_mask
 
 
-def union_of_masks(mask1: np.ndarray, mask2: np.ndarray):
+def intersection_of_masks(mask1: np.ndarray, mask2: np.ndarray):
     """Computes union of masks of same length"""
     assert mask1.shape == mask2.shape
     return mask1 * mask2

@@ -1,14 +1,13 @@
 JOINT_PAIRS = [
     ["right_elbow", "right_wrist"],
     ["right_shoulder", "right_elbow"],
-    ["right_shoulder", "right_hip"],
     ["right_hip", "right_knee"],
     ["right_knee", "right_ankle"],
     ["left_elbow", "left_wrist"],
     ["left_shoulder", "left_elbow"],
-    ["left_shoulder", "left_hip"],
     ["left_hip", "left_knee"],
     ["left_knee", "left_ankle"],
+    ["neck", "middle_hip"],
 ]
 
 LANDMARK_NAMES = [
