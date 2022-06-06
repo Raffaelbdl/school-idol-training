@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -30,12 +30,25 @@ def score_modifier(x: float, difficulty: int = 0):
         raise ValueError(f"{difficulty} difficulty is unknown")
 
 
-def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy, difficulty: int) -> Tuple[float, float]:
+def cosine_similarity(
+    chore1: Choregraphy,
+    chore2: Choregraphy,
+    difficulty: int,
+) -> Tuple[float, float]:
     """Computes the cosine similarity between chore1 and chore2"""
     keypoints1 = chore1.keypoints
     keypoints2 = chore2.keypoints
-    t_keypoints1, t_visible1 = keypoints_to_time_series(keypoints1)
-    t_keypoints2, t_visible2 = keypoints_to_time_series(keypoints2)
+    return alt_cosine_similarity(keypoints1, keypoints2, difficulty)
+
+
+def alt_cosine_similarity(
+    k1: List[Dict[str, List[float]]],
+    k2: List[Dict[str, List[float]]],
+    difficulty: int,
+) -> Tuple[float, float]:
+    """Computes the cosine similarity between chore1 and chore2"""
+    t_keypoints1, t_visible1 = keypoints_to_time_series(k1)
+    t_keypoints2, t_visible2 = keypoints_to_time_series(k2)
 
     new_t_keypoints2, new_t_visible2 = {}, {}
     for (name, seq) in t_keypoints2.items():
@@ -62,9 +75,9 @@ def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy, difficulty: int)
         link_masks.append(_mask)
 
         if joint_pair[0] not in count_masks.keys():
-            count_masks[joint_pair[0]] = t_visible1[joint_pair[0]]
+            count_masks[joint_pair[0]] = new_t_visible2[joint_pair[0]]
         if joint_pair[1] not in count_masks.keys():
-            count_masks[joint_pair[1]] = t_visible1[joint_pair[1]]
+            count_masks[joint_pair[1]] = new_t_visible2[joint_pair[1]]
         if joint_pair[0] not in link_count_masks.keys():
             link_count_masks[joint_pair[0]] = mask[joint_pair[0]]
         if joint_pair[1] not in link_count_masks.keys():
@@ -73,7 +86,7 @@ def cosine_similarity(chore1: Choregraphy, chore2: Choregraphy, difficulty: int)
     normalized = (np.sum(cosines) + np.sum(link_masks)) / (
         2 * np.sum(link_masks) + 1e-3
     )
-    normalized = score_modifier(normalized, difficulty=difficulty)
+    # normalized = score_modifier(normalized, difficulty=difficulty)
 
     link_count = np.sum([s for s in link_count_masks.values()])
     count = np.sum([s for s in count_masks.values()])
