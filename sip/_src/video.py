@@ -29,7 +29,7 @@ def play_video_with_sound(video_path: str) -> subprocess.Popen:
 def test_camera(display_joints: bool = False) -> int:
     """Computes the camera framerate"""
     # necessary to make test_camera window at front
-    _open_dummy_cv2_window() 
+    _open_dummy_cv2_window()
 
     cap = cv2.VideoCapture(0)
 
@@ -105,7 +105,25 @@ def _open_dummy_cv2_window():
     cv2.namedWindow("dummy", cv2.WINDOW_NORMAL)
     img = np.ones((100, 100, 3))
     cv2.imshow("dummy", img)
-    cv2.setWindowProperty("dummy",cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.setWindowProperty("dummy", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.waitKey(1)
     cv2.setWindowProperty("dummy", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
     cv2.destroyWindow("dummy")
+
+
+def get_duration(video_path: str) -> float:
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            video_path,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    return float(result.stdout)
