@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -35,3 +35,14 @@ def union_of_masks(mask1: np.ndarray, mask2: np.ndarray):
     """Computes union of masks of same length"""
     assert mask1.shape == mask2.shape
     return mask1 * mask2
+
+
+def split_sequence(sequence: np.ndarray, n_splits: int) -> List[np.ndarray]:
+    """Returns n_splits sequences"""
+    split_sequences = []
+    split_length = len(sequence) // n_splits
+
+    for i in range(n_splits):
+        split_sequences.append(sequence[i * split_length : (i + 1) * split_length])
+
+    return split_sequences

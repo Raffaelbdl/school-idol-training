@@ -102,3 +102,16 @@ def keypoints_to_time_series(
     t_keypoints = {k: np.array(v) for (k, v) in t_keypoints.items()}
     t_visible = {k: np.array(v) for (k, v) in t_visible.items()}
     return t_keypoints, t_visible
+
+
+def split_keypoint(
+    keypoint: List[Dict[str, List[float]]], n_splits: int
+) -> List[List[Dict[str, List[float]]]]:
+    """Returns n_splits keypoint lists"""
+    split_keypoints = []
+    split_length = len(keypoint) // n_splits
+
+    for i in range(n_splits):
+        split_keypoints.append(keypoint[i * split_length : (i + 1) * split_length])
+
+    return split_keypoints
