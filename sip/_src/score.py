@@ -6,7 +6,7 @@ from sip._src.chore import Choregraphy
 from sip._src.keypoint import keypoints_to_time_series
 from sip._src.metadata import JOINT_PAIRS
 from sip._src.metric import cosine
-from sip._src.sequence import interpolate_time_series, intersection_of_masks
+from sip._src.sequence import interpolate_time_series, union_of_masks
 
 
 # Could allow for variable difficulty here !
@@ -28,6 +28,7 @@ def score_modifier(x: float, difficulty: int = 0):
         )
     else:
         raise ValueError(f"{difficulty} difficulty is unknown")
+
 
 
 def cosine_similarity(
@@ -59,7 +60,7 @@ def alt_cosine_similarity(
         new_t_visible2[name] = new_mask
 
     mask = {
-        name: intersection_of_masks(t_visible1[name], new_t_visible2[name])
+        name: union_of_masks(t_visible1[name], new_t_visible2[name])
         for name in new_t_visible2.keys()
     }
 
@@ -80,6 +81,7 @@ def alt_cosine_similarity(
             count_masks[joint_pair[0]] = new_t_visible2[joint_pair[0]]
         if joint_pair[1] not in count_masks.keys():
             count_masks[joint_pair[1]] = new_t_visible2[joint_pair[1]]
+
         if joint_pair[0] not in link_count_masks.keys():
             link_count_masks[joint_pair[0]] = mask[joint_pair[0]]
         if joint_pair[1] not in link_count_masks.keys():
@@ -91,5 +93,5 @@ def alt_cosine_similarity(
     # normalized = score_modifier(normalized, difficulty=difficulty)
 
     link_count = np.sum([s for s in link_count_masks.values()])
-    count = np.sum([np.sum(s) for s in count_masks.values()])
+    count = np.sum([s for s in count_masks.values()])
     return normalized, link_count / count
