@@ -5,9 +5,10 @@ from colorama import Fore
 from sip import load_chore, make_chore_from_file, save_chore
 from sip import dance_along
 from sip import cosine_similarity
+from sip._src.game import launch_game
 
 choregraphies_dir_path = "./choregraphies"
-difficulty = 2 # 0 easy, 1 medium, 2 hard
+difficulty = 2  # 0 easy, 1 medium, 2 hard
 
 
 if __name__ == "__main__":
@@ -43,26 +44,27 @@ if __name__ == "__main__":
         print("Please set up your camera")
         print("Press 'Q' to start")
 
-        dance_along(chore)
-        trainee = make_chore_from_file(
-            f"trainee_{choregraphies[choice]}",
-            "./tmp.mp4",
-            load_message="We are computing your score ... ",
-        )
+        # dance_along(chore)
+        score, visibility = launch_game(chore)
+        # trainee = make_chore_from_file(
+        #     f"trainee_{choregraphies[choice]}",
+        #     "./tmp.mp4",
+        #     load_message="We are computing your score ... ",
+        # )
 
-        score, proportion = cosine_similarity(chore, trainee, difficulty)
-        score *= 100
+        # score, proportion = cosine_similarity(chore, trainee, difficulty)
+        # score *= 100
 
-        trainee.score = score
-        save_chore(trainee, "./trainee_chores/")
-        os.remove("./tmp.mp4")
+        # trainee.score = score
+        # save_chore(trainee, "./trainee_chores/")
+        # os.remove("./tmp.mp4")
 
         print(
             "Your final score is "
             + Fore.RED
             + f"{int(score)}"
             + Fore.RESET
-            + f" with joint visibility of {proportion:.2f}"
+            + f" with joint visibility of {visibility:.2f}"
         )
 
         while True:

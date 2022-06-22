@@ -38,28 +38,88 @@ def get_keypoints_from_video_file(
             ret, frame = cap.read()
             if not ret:
                 break
-
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(frame)
-            pose_landmarks = results.pose_landmarks
-
-            if pose_landmarks is not None:
-                frame_landmarks = {}
-                for idx, landmark in enumerate(pose_landmarks.landmark):
-                    landmark_name = LANDMARK_NAMES[idx]
-                    if landmark.HasField("visibility") and landmark.visibility >= 0.5:
-                        frame_landmarks[landmark_name] = [
-                            landmark.x,
-                            landmark.y,
-                            landmark.z,
-                        ]
-                keypoints.append(frame_landmarks)
-                landmarks.append(pose_landmarks)
-            else:
-                keypoints.append(None)
-                landmarks.append(None)
+                
+            frame_landmarks, pose_landmarks = capture_keypoints_from_frame(
+                frame, pose, LANDMARK_NAMES, False, True
+            )
+            keypoints.append(frame_landmarks)
+            landmarks.append(pose_landmarks)
 
     return keypoints, landmarks
+
+
+def get_keypoints_from_stream(
+    vid: cv2.VideoCapture, landmark_list: List[str]
+) -> Dict[str, List[float]]:
+    """Capture keypoints from a video stream
+
+    Args:
+        vid: a cv2 video stream
+        landmark_list: the name of the joints to capture
+
+    Outputs:
+        frame_landmarks: the keypoints corresponding to the sampled frame
+        pose_landmarks: the poses corresponding to the sampled frame (for
+            eventual plotting)
+    """
+
+    with mp_pose.Pose(
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+    ) as pose:
+
+        ret, frame = vid.read()
+        frame_landmarks, pose_landmarks = capture_keypoints_from_frame(
+            frame, pose, landmark_list, True, True
+        )
+    return frame_landmarks, pose_landmarks
+
+
+def capture_keypoints_from_frame(
+    frame: np.ndarray,
+    pose: mp_pose.Pose,
+    landmark_list: List[str],
+    camera_mirror: bool = False,
+    vertical_mirror: bool = True,
+):
+    """Capture keypoints from a video frame
+
+    Args:
+        frame (np.ndarray): the output of cv2.VideoCapture().read()
+        pose: the mp_pose in context
+        landmark_list: the name of the joints to capture
+        camera_mirror (bool): if True, keypoints are flipped horizontally
+        vertical_mirror (bool): if True, keypoints are flipped vertically
+
+    Outputs:
+        frame_landmarks: the keypoints corresponding to the sampled frame
+        pose_landmarks: the poses corresponding to the sampled frame (for
+            eventual plotting)
+    """
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = pose.process(frame)
+    pose_landmarks = results.pose_landmarks
+
+    if pose_landmarks is not None:
+        frame_landmarks = {}
+
+        for idx, landmark in enumerate(pose_landmarks.landmark):
+
+            landmark_name = landmark_list[idx]
+
+            if landmark.HasField("visibility") and landmark.visibility >= 0.5:
+
+                x_factor = -1 if camera_mirror else 1
+                y_factor = -1 if vertical_mirror else 1
+                frame_landmarks[landmark_name] = [
+                    x_factor * landmark.x,  # ATTENTION MINUS X FOR MIRROR
+                    y_factor * landmark.y,  # ATTENTION MINUS Y
+                    landmark.z,
+                ]
+        return frame_landmarks, pose_landmarks
+    else:
+        return None, None
 
 
 def keypoints_to_time_series(
