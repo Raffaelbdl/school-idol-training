@@ -1,5 +1,7 @@
+from dataclasses import dataclass, field
+import os
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 from mediapipe.python.solutions import pose as mp_pose
@@ -7,8 +9,12 @@ import numpy as np
 import pyglet
 
 from sip._src.chore import Choregraphy
-from sip._src.keypoint import keypoints_to_time_series, split_keypoint
-from sip._src.metadata import LANDMARK_NAMES
+from sip._src.keypoint import (
+    keypoints_to_time_series,
+    split_keypoint,
+    capture_keypoints_from_frame,
+)
+from sip._src.metadata import CAMERA_LANDMARK_NAMES
 from sip._src.score import alt_cosine_similarity
 from sip._src.sequence import split_sequence
 from sip._src.video import get_duration, test_camera
@@ -39,84 +45,115 @@ def get_chore_sequence_splits(
     return split_t_keypoints, split_t_visible
 
 
-def capture_keypoints(vid: cv2.VideoCapture):
+def capture_keypoints(
+    vid: cv2.VideoCapture, landmark_list: List[str]
+) -> Dict[str, List[float]]:
+    """Capture keypoints video stream
+
+    Args:
+        vid: a cv2 video stream
+        landmark_list: the name of the joints to capture
+
+    Outputs:
+        frame_landmarks: the keypoints corresponding to the sampled frame
+    """
+
     with mp_pose.Pose(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ) as pose:
 
         ret, frame = vid.read()
-        frame = cv2.flip(frame, 0)
-        frame = cv2.flip(frame, 1)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(frame)
-        pose_landmarks = results.pose_landmarks
-
-        if pose_landmarks is not None:
-            frame_landmarks = {}
-            for idx, landmark in enumerate(pose_landmarks.landmark):
-                landmark_name = LANDMARK_NAMES[idx]
-                if landmark.HasField("visibility") and landmark.visibility >= 0.5:
-                    frame_landmarks[landmark_name] = [
-                        landmark.x,
-                        landmark.y,
-                        landmark.z,
-                    ]
-            return frame_landmarks
-        else:
-            return None
+        frame_landmarks = capture_keypoints_from_frame(
+            frame, pose, landmark_list, True, True
+        )[0]
+    return frame_landmarks
 
 
 def fill_buffer(
     dt,
     vid: cv2.VideoCapture,
 ):
-    frame_keypoints = capture_keypoints(vid)
+    """Capture keypoints and append to global buffer
+
+    Args:
+        dt: for pyglet use
+        vid: the user's camera cv2 stream
+    """
+
     global BUFFER
+
+    frame_keypoints = capture_keypoints(vid, CAMERA_LANDMARK_NAMES)
     BUFFER.append(frame_keypoints)
 
 
 def score(
     dt,
     chore_buffers: List[List[Dict[str, List[float]]]],
-    label,
-):
+    score_label: pyglet.text.Label,
+    save_segments: bool = False,
+    save_path: Optional[str] = "./",
+) -> None:
+    """Score a segment
 
-    global AT, BUFFER, LAST, SCORE
-    # pickle.dump(BUFFER, open(f"buffer_{AT}", "wb"))
-    # pickle.dump(chore_buffers[AT], open(f"choreat_{AT}", "wb"))
+    Args:
+        dt: for pyglet use
+        chore_buffers: a list of segments from the original choregraphy
+        score_label: the score pyglet text Label
+        save_segments: if True, every segment will be saved on disk
+        save_path: the path where segments are saved, './' by default
+    """
+    global BUFFER, CUR_SEGMENT, PREV_SCORE
 
-    SCORE, visibility = alt_cosine_similarity(BUFFER, chore_buffers[AT], 0)
+    if save_segments:
+        pickle.dump(
+            BUFFER, open(os.path.join(save_path, f"buffer_{CUR_SEGMENT}"), "wb")
+        )
+        pickle.dump(
+            chore_buffers[CUR_SEGMENT],
+            open(os.path.join(save_path, f"choreat_{CUR_SEGMENT}"), "wb"),
+        )
 
-    AT += 1
+    score, visibility = alt_cosine_similarity(BUFFER, chore_buffers[CUR_SEGMENT], 0)
+
     BUFFER = []
-    # print("score ", SCORE)
-    if SCORE > 0.80:
-        LAST = "good"
-    else:
-        LAST = "ok"
+    CUR_SEGMENT += 1
+    PREV_SCORE = 1 if score > 0.80 else 0
 
-    label.text = f"{SCORE:.2f} - {visibility:.2f}"
+    score_label.text = f"{score:.2f} - {visibility:.2f}"
 
 
 def launch_game(chore: Choregraphy):
-
+    """Dance along and score in real time"""
     fps = test_camera(True)
     time.sleep(3)
-    vid = cv2.VideoCapture(0)
 
+    # defining global variables
+    global BUFFER, CUR_SEGMENT, PREV_SCORE
+
+    BUFFER = []  # buffer to store current segment
+    CUR_SEGMENT = 0  # current segment
+    PREV_SCORE = 0  # how well user performed last segment
+
+    # making window
     title = "School Idol Project"
     window = pyglet.window.Window(fullscreen=True, caption=title)
 
+    # loading user's camera
+    vid = cv2.VideoCapture(0)
+
+    # loading choregraphy's video
     video_path = chore.video_path
     video_player = pyglet.media.Player()
     video_media = pyglet.media.load(video_path)
     video_player.queue(video_media)
     video_player.play()
 
-    img = pyglet.image.load("./resources/kotori.jpeg")
+    # loading good segment gif
+    good_animation = pyglet.image.load_animation("./resources/test.gif")
+    sprite = pyglet.sprite.Sprite(img=good_animation)
 
-    global SCORE
+    # loading score text canvas
     label = pyglet.text.Label(
         "",
         font_name="Times New Roman",
@@ -127,14 +164,15 @@ def launch_game(chore: Choregraphy):
         anchor_y="center",
     )
 
-    global BUFFER, AT, LAST
-    BUFFER, AT, LAST = [], 0, "ok"
+    # splitting the chore in segments
     n_splits = int(get_duration(video_path) // 1) + 1
     chore_buffers = split_keypoint(chore.keypoints, n_splits)
 
+    # defining functions to fill buffer and score segment
     pyglet.clock.schedule_interval(fill_buffer, 1 / fps, vid)
-    pyglet.clock.schedule_interval(score, 1, chore_buffers, label)
+    pyglet.clock.schedule_interval(score, 1, chore_buffers, label, save_segments=False)
 
+    # defining pyglet on_draw function
     @window.event
     def on_draw():
         window.clear()
@@ -146,9 +184,8 @@ def launch_game(chore: Choregraphy):
         else:
             pyglet.app.exit()
 
-        global LAST
-        if LAST == "good":
-            img.blit(0, 850)
+        if PREV_SCORE:
+            sprite.draw()
 
         label.draw()
 
