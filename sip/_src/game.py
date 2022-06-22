@@ -1,10 +1,8 @@
-from dataclasses import dataclass, field
 import os
 import time
 from typing import Dict, List, Optional, Tuple
 
 import cv2
-from mediapipe.python.solutions import pose as mp_pose
 import numpy as np
 import pyglet
 
@@ -12,7 +10,7 @@ from sip._src.chore import Choregraphy
 from sip._src.keypoint import (
     keypoints_to_time_series,
     split_keypoint,
-    capture_keypoints_from_frame,
+    get_keypoints_from_stream,
 )
 from sip._src.metadata import CAMERA_LANDMARK_NAMES
 from sip._src.score import alt_cosine_similarity
@@ -45,31 +43,6 @@ def get_chore_sequence_splits(
     return split_t_keypoints, split_t_visible
 
 
-def capture_keypoints(
-    vid: cv2.VideoCapture, landmark_list: List[str]
-) -> Dict[str, List[float]]:
-    """Capture keypoints video stream
-
-    Args:
-        vid: a cv2 video stream
-        landmark_list: the name of the joints to capture
-
-    Outputs:
-        frame_landmarks: the keypoints corresponding to the sampled frame
-    """
-
-    with mp_pose.Pose(
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-    ) as pose:
-
-        ret, frame = vid.read()
-        frame_landmarks = capture_keypoints_from_frame(
-            frame, pose, landmark_list, True, True
-        )[0]
-    return frame_landmarks
-
-
 def fill_buffer(
     dt,
     vid: cv2.VideoCapture,
@@ -83,7 +56,7 @@ def fill_buffer(
 
     global BUFFER
 
-    frame_keypoints = capture_keypoints(vid, CAMERA_LANDMARK_NAMES)
+    frame_keypoints = get_keypoints_from_stream(vid, CAMERA_LANDMARK_NAMES)[0]
     BUFFER.append(frame_keypoints)
 
 

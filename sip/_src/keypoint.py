@@ -47,6 +47,33 @@ def get_keypoints_from_video_file(
     return keypoints, landmarks
 
 
+def get_keypoints_from_stream(
+    vid: cv2.VideoCapture, landmark_list: List[str]
+) -> Dict[str, List[float]]:
+    """Capture keypoints from a video stream
+
+    Args:
+        vid: a cv2 video stream
+        landmark_list: the name of the joints to capture
+
+    Outputs:
+        frame_landmarks: the keypoints corresponding to the sampled frame
+        pose_landmarks: the poses corresponding to the sampled frame (for
+            eventual plotting)
+    """
+
+    with mp_pose.Pose(
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+    ) as pose:
+
+        ret, frame = vid.read()
+        frame_landmarks, pose_landmarks = capture_keypoints_from_frame(
+            frame, pose, landmark_list, True, True
+        )
+    return frame_landmarks, pose_landmarks
+
+
 def capture_keypoints_from_frame(
     frame: np.ndarray,
     pose: mp_pose.Pose,
