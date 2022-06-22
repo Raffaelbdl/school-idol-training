@@ -8,7 +8,7 @@ from sip._src.keypoint import keypoints_to_time_series
 from sip._src.metric import cosine
 from sip._src.score import cosine_similarity
 from sip._src.sequence import interpolate_time_series
-from sip._src.sequence import intersection_of_masks
+from sip._src.sequence import union_of_masks
 from sip._src.video import play_video_with_sound
 from sip._src.video import test_camera
 from sip._src.video import record_camera

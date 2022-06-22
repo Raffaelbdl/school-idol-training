@@ -4,11 +4,9 @@ import pickle
 import shutil
 from typing import Dict, List, Optional
 
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 
-from sip._src.keypoint import get_keypoints_from_video_file, keypoints_to_time_series
+from sip._src.keypoint import get_keypoints_from_video_file
 
 
 @dataclass
@@ -17,8 +15,7 @@ class Choregraphy:
 
     title: str
     keypoints: List[Dict[str, List[float]]]
-
-    landmarks: List[NormalizedLandmarkList] = field(default=None)
+    landmarks: List[NormalizedLandmarkList]
     video_path: str = field(default=None)
 
     score: float = field(default=None)  # for trainee
@@ -73,7 +70,7 @@ def save_chore(chore: Choregraphy, dirpath: str) -> None:
     with open(os.path.join(chore_path, "score"), "wb") as f:
         pickle.dump(chore.score, f)
 
-
+        
 def plot_chore(chore: Choregraphy, keys: Optional[List[str]] = None) -> None:
     keypoints = chore.keypoints
     return plot_keypoints(keypoints, keys)
