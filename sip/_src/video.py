@@ -58,7 +58,7 @@ def test_camera(display_joints: bool = False) -> int:
             n_frames += 1
             cv2.imshow("Test Camera", cv2.flip(frame, 1))
             cv2.setWindowProperty("Test Camera", cv2.WND_PROP_TOPMOST, 1)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            if cv2.waitKey(1) & 0xFF == ord("q") and n_frames > 30:
                 break
 
     duration = time.time() - start
