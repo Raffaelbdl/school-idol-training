@@ -32,7 +32,6 @@ def load_chore(chore_path: str) -> Choregraphy:
         keypoints=keypoints,
         landmarks=landmarks,
         video_path=os.path.join(chore_path, "video.mp4"),
-        score=score,
     )
 
 
@@ -48,8 +47,6 @@ def save_chore(chore: Choregraphy, dirpath: str) -> None:
         pickle.dump(chore.keypoints, f)
     with open(os.path.join(chore_path, "landmarks"), "wb") as f:
         pickle.dump(chore.landmarks, f)
-    with open(os.path.join(chore_path, "score"), "wb") as f:
-        pickle.dump(chore.score, f)
 
 
 def make_chore_from_file(
