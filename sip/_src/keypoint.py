@@ -1,131 +1,140 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
-from mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 from mediapipe.python.solutions import pose as mp_pose
 import numpy as np
 from tqdm import tqdm
 
-from sip._src.metadata import LANDMARK_NAMES
+from sip._src import Keypoints, Landmarks, LANDMARK_NAMES
 
 
 def get_keypoints_from_video_file(
     filepath: str, load_message: Optional[str] = None
-) -> Tuple[List[Dict[str, List[float]]], NormalizedLandmarkList]:
-    """Gets keypoints from array for each frame
+) -> Tuple[List[Union[Keypoints, None]], List[Union[Landmarks, None]]]:
+    """Get keypoints from a video file
+
+    Args:
+        filepath (str): path to video, eg. "path/to/video.mp4"
+        load_message (str): message to display when compiling the chore
 
     Returns:
-        keypoints (list): List of dictionaries where keys are keypoints' names and
-            values are a list of coordinates of each keypoint
-        landmarks (list): List of mediapipe landmarks for each frame (for plot)
+        keypoints_list: List of Keypoints
+        landmarks_list: List of Landmarks
     """
-    keypoints = []
-    landmarks = []
+    keypoints_list, landmarks_list = [], []
+
     cap = cv2.VideoCapture(filepath)
     n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    if load_message is not None:
+        iterator = tqdm(range(n_frames), desc=load_message)
+    else:
+        iterator = tqdm(range(n_frames), desc="Compiling choregraphy ...")
 
     with mp_pose.Pose(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ) as pose:
-        iterator = (
-            tqdm(range(n_frames), desc=load_message)
-            if load_message is not None
-            else tqdm(range(n_frames), desc="Making prediction from array ...")
-        )
-        for i in iterator:
+
+        for _ in iterator:
 
             ret, frame = cap.read()
             if not ret:
-                break
-                
-            frame_landmarks, pose_landmarks = capture_keypoints_from_frame(
+                keypoints_list.append(None)
+                keypoints_list.append(None)
+                continue
+
+            frame_keypoints, frame_landmarks = get_keypoints_from_frame(
                 frame, pose, LANDMARK_NAMES, False, True
             )
-            keypoints.append(frame_landmarks)
-            landmarks.append(pose_landmarks)
+            keypoints_list.append(frame_keypoints)
+            landmarks_list.append(frame_landmarks)
 
-    return keypoints, landmarks
+    return keypoints_list, landmarks_list
 
 
 def get_keypoints_from_stream(
-    vid: cv2.VideoCapture, landmark_list: List[str]
-) -> Dict[str, List[float]]:
-    """Capture keypoints from a video stream
+    vid: cv2.VideoCapture, landmark_names: List[str]
+) -> Union[Tuple[Keypoints, Landmarks], Tuple[None, None]]:
+    """Get keypoints from a video stream
 
     Args:
         vid: a cv2 video stream
-        landmark_list: the name of the joints to capture
+        landmark_names (List[str]): the names of the joints to capture ordered
 
-    Outputs:
-        frame_landmarks: the keypoints corresponding to the sampled frame
-        pose_landmarks: the poses corresponding to the sampled frame (for
+    Returns:
+        frame_keypoints: the keypoints corresponding to the sampled frame
+        frame_landmarks: the poses corresponding to the sampled frame (for
             eventual plotting)
     """
-
     with mp_pose.Pose(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ) as pose:
 
         ret, frame = vid.read()
-        frame_landmarks, pose_landmarks = capture_keypoints_from_frame(
-            frame, pose, landmark_list, True, True
+        if not ret:
+            return None, None
+
+        frame_keypoints, frame_landmarks = get_keypoints_from_frame(
+            frame, pose, landmark_names, True, True
         )
-    return frame_landmarks, pose_landmarks
+
+    return frame_keypoints, frame_landmarks
 
 
-def capture_keypoints_from_frame(
+def get_keypoints_from_frame(
     frame: np.ndarray,
     pose: mp_pose.Pose,
-    landmark_list: List[str],
+    landmark_names: List[str],
     camera_mirror: bool = False,
     vertical_mirror: bool = True,
-):
+) -> Union[Tuple[Keypoints, Landmarks], Tuple[None, None]]:
     """Capture keypoints from a video frame
 
     Args:
         frame (np.ndarray): the output of cv2.VideoCapture().read()
-        pose: the mp_pose in context
-        landmark_list: the name of the joints to capture
+        pose (mp_pose.Pose): the mp_pose in context
+        landmark_names (List[str]): the name of the joints to capture
         camera_mirror (bool): if True, keypoints are flipped horizontally
         vertical_mirror (bool): if True, keypoints are flipped vertically
 
-    Outputs:
-        frame_landmarks: the keypoints corresponding to the sampled frame
-        pose_landmarks: the poses corresponding to the sampled frame (for
+    Returns:
+        frame_keypoints: the keypoints corresponding to the sampled frame
+        frame_landmarks: the landmarks corresponding to the sampled frame (for
             eventual plotting)
     """
-
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = pose.process(frame)
-    pose_landmarks = results.pose_landmarks
+    frame_landmarks = results.pose_landmarks
 
-    if pose_landmarks is not None:
-        frame_landmarks = {}
+    if frame_landmarks is not None:
+        frame_keypoints = {}
 
-        for idx, landmark in enumerate(pose_landmarks.landmark):
+        for idx, landmark in enumerate(frame_landmarks.landmark):
 
-            landmark_name = landmark_list[idx]
+            landmark_name = landmark_names[idx]
 
             if landmark.HasField("visibility") and landmark.visibility >= 0.5:
 
                 x_factor = -1 if camera_mirror else 1
                 y_factor = -1 if vertical_mirror else 1
-                frame_landmarks[landmark_name] = [
-                    x_factor * landmark.x,  # ATTENTION MINUS X FOR MIRROR
-                    y_factor * landmark.y,  # ATTENTION MINUS Y
+                frame_keypoints[landmark_name] = [
+                    x_factor * landmark.x,
+                    y_factor * landmark.y,
                     landmark.z,
                 ]
-        return frame_landmarks, pose_landmarks
+
+        return frame_keypoints, frame_landmarks
+
     else:
         return None, None
 
 
 def keypoints_to_time_series(
-    keypoints: List[Dict[str, List[float]]]
+    keypoints_list: List[Keypoints],
 ) -> Tuple[Dict[str, np.ndarray]]:
-    """Transforms keypoints to time series
+    """Transform keypoints to time series
 
     * If a keypoint is None (does not exist, its corresponding value
     will be [-10, -10])
@@ -133,45 +142,53 @@ def keypoints_to_time_series(
     * Only x and y dimensions are used !
 
     Args:
-        keypoints (List[Dict[str, List[float]]])
+        keypoints_list (List[Keypoiints])
+
     Returns:
         time_keypoints (Dict[str, np.ndarray])
-            where keys are joint names
+            where keys are landmarks names
             and values are sequences of list for coordinates
-        time_visibles (Dict[str, np.ndarray])
-            where keys are joint names
+        time_visible (Dict[str, np.ndarray])
+            where keys are landmarks names
             and values are booleans to tell if joint is visible
     """
     t_keypoints = {name: [] for name in LANDMARK_NAMES}
     t_visible = {name: [] for name in LANDMARK_NAMES}
 
-    for t in range(len(keypoints)):
-        if keypoints[t] is None:
-            for name in t_keypoints.keys():
+    for t in range(len(keypoints_list)):
+
+        for name in t_keypoints.keys():
+            if keypoints_list[t] is None or name not in keypoints_list[t].keys():
                 t_keypoints[name].append([-10, -10])
                 t_visible[name].append(0)
-        else:
-            for name in t_keypoints.keys():
-                try:
-                    t_keypoints[name].append(keypoints[t][name][:2])
-                    t_visible[name].append(1)
-                except KeyError:
-                    t_keypoints[name].append([-10, -10])
-                    t_visible[name].append(0)
+            else:
+                t_keypoints[name].append(keypoints_list[t][name][:2])
+                t_visible[name].append(1)
 
     t_keypoints = {k: np.array(v) for (k, v) in t_keypoints.items()}
     t_visible = {k: np.array(v) for (k, v) in t_visible.items()}
+
     return t_keypoints, t_visible
 
 
 def split_keypoint(
-    keypoint: List[Dict[str, List[float]]], n_splits: int
+    keypoints_list: List[Keypoints], n_splits: int
 ) -> List[List[Dict[str, List[float]]]]:
-    """Returns n_splits keypoint lists"""
-    split_keypoints = []
-    split_length = len(keypoint) // n_splits
+    """Split a list of keypoints
+
+    Args:
+        keypoints_list (List[Keypoints])
+        n_splits (int): number of segments
+
+    Returns:
+        split_keypoints_list (List[List[Keypoints]])
+    """
+    split_keypoints_list = []
+    split_length = len(keypoints_list) // n_splits
 
     for i in range(n_splits):
-        split_keypoints.append(keypoint[i * split_length : (i + 1) * split_length])
+        split_keypoints_list.append(
+            keypoints_list[i * split_length : (i + 1) * split_length]
+        )
 
-    return split_keypoints
+    return split_keypoints_list
