@@ -179,5 +179,6 @@ def launch_game(chore: Choregraphy, difficulty: int):
 
     pyglet.app.run()
     window.close()
+    vid.release()
 
     return TOTAL_SCORE / n_splits, TOTAL_VISIBILITY / n_splits
