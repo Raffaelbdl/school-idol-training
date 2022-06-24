@@ -1,4 +1,3 @@
-"""Video related functions"""
 import os
 import subprocess
 import time
@@ -13,12 +12,13 @@ import numpy as np
 
 
 def play_video_with_sound(video_path: str) -> subprocess.Popen:
-    """Uses ffmpeg to play a video
+    """Use ffmpeg to play a video
 
     Args:
-        video_path (str): Path to video
+        video_path (str): path to video (eg. "path/to/video.mp4")
+
     Returns:
-        A subprocess that launch the video
+        a subprocess that launch the video
     """
     p = subprocess.Popen(
         f"ffplay {video_path} -autoexit -hide_banner -loglevel error -fs", shell=True
@@ -27,8 +27,8 @@ def play_video_with_sound(video_path: str) -> subprocess.Popen:
 
 
 def test_camera(display_joints: bool = False) -> int:
-    """Computes the camera framerate"""
-    # necessary to make test_camera window at front
+    """Compute the camera framerate"""
+    # used to make test_camera window in foreground
     _open_dummy_cv2_window()
 
     cap = cv2.VideoCapture(0)
@@ -58,7 +58,7 @@ def test_camera(display_joints: bool = False) -> int:
             n_frames += 1
             cv2.imshow("Test Camera", cv2.flip(frame, 1))
             cv2.setWindowProperty("Test Camera", cv2.WND_PROP_TOPMOST, 1)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            if cv2.waitKey(1) & 0xFF == ord("q") and n_frames > 30:
                 break
 
     duration = time.time() - start
@@ -69,8 +69,12 @@ def test_camera(display_joints: bool = False) -> int:
 
 
 def record_camera(video_name: str, dir_path: str, n_frames: int) -> None:
-    """Records the camera
-    for a given number of frames
+    """Record the camera for a given number of frames
+
+    Args:
+        video_name (str): name of the video being recorded (eg. "video")
+        dir_path (str): path where file is saved (eg. path/to/)
+        n_frames (int): number of frames to record
     """
     fps = test_camera(True)
     time.sleep(3.0)
@@ -112,6 +116,7 @@ def _open_dummy_cv2_window():
 
 
 def get_duration(video_path: str) -> float:
+    """Get the duration of a video using ffmpeg"""
     result = subprocess.run(
         [
             "ffprobe",

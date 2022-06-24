@@ -1,4 +1,5 @@
 import os
+import pickle
 import time
 from typing import Dict, List, Optional, Tuple
 
@@ -6,26 +7,33 @@ import cv2
 import numpy as np
 import pyglet
 
-from sip._src.chore import Choregraphy
+from sip._src import Keypoints, CAMERA_LANDMARK_NAMES
+from sip._src.choregraphy import Choregraphy
 from sip._src.keypoint import (
     keypoints_to_time_series,
     split_keypoint,
     get_keypoints_from_stream,
 )
-from sip._src.metadata import CAMERA_LANDMARK_NAMES
 from sip._src.score import alt_cosine_similarity
 from sip._src.sequence import split_sequence
 from sip._src.video import get_duration, test_camera
-
-import pickle
 
 
 def get_chore_sequence_splits(
     chore: Choregraphy, split_duration: float
 ) -> Tuple[Dict[str, List[np.ndarray]]]:
-    """
+    """Get segments of keypoints time series from a choregraphy
     Args:
-        split_duration (float): Duration in seconds
+        chore (Choregraphy)
+        split_duration (float): duration in seconds of a segment
+
+    Returns:
+        split_time_keypoints (List[Dict[str, np.ndarray]])
+            where keys are landmarks names
+            and values are sequences of list for coordinates
+        split_time_visible (List[Dict[str, np.ndarray]])
+            where keys are landmarks names
+            and values are booleans to tell if joint is visible
     """
     keypoints = chore.keypoints
     t_keypoints, t_visible = keypoints_to_time_series(keypoints)
@@ -43,38 +51,36 @@ def get_chore_sequence_splits(
     return split_t_keypoints, split_t_visible
 
 
-def fill_buffer(
-    dt,
-    vid: cv2.VideoCapture,
-):
-    """Capture keypoints and append to global buffer
+def _fill_buffer(dt, vid: cv2.VideoCapture) -> None:
+    """Capture keypoints and add to global buffer
 
     Args:
         dt: for pyglet use
         vid: the user's camera cv2 stream
     """
-
     global BUFFER
 
     frame_keypoints = get_keypoints_from_stream(vid, CAMERA_LANDMARK_NAMES)[0]
     BUFFER.append(frame_keypoints)
 
 
-def score(
+def _score(
     dt,
-    chore_buffers: List[List[Dict[str, List[float]]]],
+    chore_buffers: List[List[Keypoints]],
     score_label: pyglet.text.Label,
+    difficulty: int,
     save_segments: bool = False,
-    save_path: Optional[str] = "./",
+    save_path: str = "./",
 ) -> None:
     """Score a segment
 
     Args:
         dt: for pyglet use
-        chore_buffers: a list of segments from the original choregraphy
-        score_label: the score pyglet text Label
-        save_segments: if True, every segment will be saved on disk
-        save_path: the path where segments are saved, './' by default
+        chore_buffers (List[List[Keypoints]]): from the original choregraphy
+        score_label (pyglet.text.Label): the score pyglet text Label
+        difficulty (int): the game's difficulty
+        save_segments (bool): if True, every segment will be saved on disk
+        save_path (str): the path where segments are saved ("./" by default)
     """
     global BUFFER, CUR_SEGMENT, PREV_SCORE, TOTAL_SCORE, TOTAL_VISIBILITY
 
@@ -87,7 +93,9 @@ def score(
             open(os.path.join(save_path, f"choreat_{CUR_SEGMENT}"), "wb"),
         )
 
-    score, visibility = alt_cosine_similarity(BUFFER, chore_buffers[CUR_SEGMENT], 0)
+    score, visibility = alt_cosine_similarity(
+        BUFFER, chore_buffers[CUR_SEGMENT], difficulty
+    )
 
     BUFFER = []
     CUR_SEGMENT += 1
@@ -98,7 +106,7 @@ def score(
     score_label.text = f"{score:.2f} - {visibility:.2f}"
 
 
-def launch_game(chore: Choregraphy):
+def launch_game(chore: Choregraphy, difficulty: int):
     """Dance along and score in real time"""
     fps = test_camera(True)
     time.sleep(3)
@@ -146,8 +154,10 @@ def launch_game(chore: Choregraphy):
     chore_buffers = split_keypoint(chore.keypoints, n_splits)
 
     # defining functions to fill buffer and score segment
-    pyglet.clock.schedule_interval(fill_buffer, 1 / fps, vid)
-    pyglet.clock.schedule_interval(score, 1, chore_buffers, label, save_segments=False)
+    pyglet.clock.schedule_interval(_fill_buffer, 1 / fps, vid)
+    pyglet.clock.schedule_interval(
+        _score, 1, chore_buffers, label, difficulty, save_segments=False
+    )
 
     # defining pyglet on_draw function
     @window.event
@@ -168,5 +178,6 @@ def launch_game(chore: Choregraphy):
 
     pyglet.app.run()
     window.close()
+    vid.release()
 
     return TOTAL_SCORE / n_splits, TOTAL_VISIBILITY / n_splits
