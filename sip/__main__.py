@@ -46,7 +46,7 @@ if __name__ == "__main__":
         print(
             "Your final score is "
             + Fore.RED
-            + f"{int(score)}"
+            + f"{score:.2f}"
             + Fore.RESET
             + f" with joint visibility of {visibility:.2f}"
         )
