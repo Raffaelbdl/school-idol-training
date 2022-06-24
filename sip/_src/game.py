@@ -1,4 +1,5 @@
 import os
+import pickle
 import time
 from typing import Dict, List, Optional, Tuple
 
@@ -16,8 +17,6 @@ from sip._src.keypoint import (
 from sip._src.score import alt_cosine_similarity
 from sip._src.sequence import split_sequence
 from sip._src.video import get_duration, test_camera
-
-import pickle
 
 
 def get_chore_sequence_splits(
