@@ -24,8 +24,6 @@ def load_chore(chore_path: str) -> Choregraphy:
         keypoints = pickle.load(f)
     with open(os.path.join(chore_path, "landmarks"), "rb") as f:
         landmarks = pickle.load(f)
-    with open(os.path.join(chore_path, "score"), "rb") as f:
-        score = pickle.load(f)
 
     return Choregraphy(
         title=title,
